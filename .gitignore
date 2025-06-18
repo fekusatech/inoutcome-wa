@@ -1,0 +1,4 @@
+.wwebjs_cache
+node_modules
+.wwebjs_auth
+.vscode
