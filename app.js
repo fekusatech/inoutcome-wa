@@ -156,7 +156,7 @@ client.on('ready', async () => {
 });
 
 client.on('message', async msg => {
-    console.log('MESSAGE RECEIVED', msg);
+    // console.log('MESSAGE RECEIVED', msg);
     console.log(`👤 From: ${msg.author || msg.from}`);
     console.log(`💬 Message: "${msg.body}"`);
     console.log(`📅 Time: ${new Date().toLocaleString('id-ID')}`);
@@ -763,43 +763,63 @@ client.on('message', async msg => {
             let summary = '📋 *Riwayat Transaksi Terakhir:*\n\n';
             let totalIncome = 0;
             let totalOutcome = 0;
+            let outcomeIndex = 1;
+            let incomeIndex = 1;
 
-            // Separate income and outcome
+            // Pisahkan income dan outcome
             const incomes = rows.filter(r => r.transaction_category === 'income');
             const outcomes = rows.filter(r => r.transaction_category === 'outcome');
 
-            // Display outcomes first
+            // Pengeluaran
             if (outcomes.length > 0) {
                 summary += '💸 *Pengeluaran:*\n';
-                outcomes.forEach((row, index) => {
+                outcomes.forEach((row) => {
                     const status = row.transaction_type === 'confirmed' ? '✅' :
                         row.transaction_type === 'rejected' ? '❌' : '⏳';
                     const date = new Date(row.created_at).toLocaleDateString('id-ID');
-                    summary += `${index + 1}. ${status} ${row.user_name}\n`;
-                    summary += `   ${row.quantity} ${row.item_name} - Rp ${row.price.toLocaleString()}\n`;
-                    summary += `   Total: Rp ${row.total_amount.toLocaleString()} (${date})\n\n`;
-                    totalOutcome += row.total_amount;
+
+                    const quantity = Number(row.quantity) || 1;
+                    const price = Number(row.price) || 0;
+                    const total = quantity * price;
+
+                    summary += `${outcomeIndex++}. ${status} ${row.user_name}\n`;
+                    summary += `   ${quantity} ${row.item_name} - Rp ${price.toLocaleString()}\n`;
+                    summary += `   Total: Rp ${total.toLocaleString()} (${date})\n\n`;
+
+                    // Hanya hitung jika status dikonfirmasi
+                    if (row.transaction_type === 'confirmed') {
+                        totalOutcome += total;
+                    }
                 });
             }
 
-            // Display incomes
+            // Pemasukan
             if (incomes.length > 0) {
                 summary += '💰 *Pemasukan:*\n';
-                incomes.forEach((row, index) => {
+                incomes.forEach((row) => {
                     const status = row.transaction_type === 'confirmed' ? '✅' :
                         row.transaction_type === 'rejected' ? '❌' : '⏳';
                     const date = new Date(row.created_at).toLocaleDateString('id-ID');
-                    summary += `${index + 1}. ${status} ${row.user_name}\n`;
-                    summary += `   ${row.item_name} - Rp ${row.price.toLocaleString()}\n`;
+
+                    const quantity = Number(row.quantity) || 1;
+                    const price = Number(row.price) || 0;
+                    const total = quantity * price;
+
+                    summary += `${incomeIndex++}. ${status} ${row.user_name}\n`;
+                    summary += `   ${row.item_name} - Rp ${price.toLocaleString()}\n`;
                     if (row.sender) {
                         summary += `   Dari: ${row.sender}\n`;
                     }
-                    summary += `   Total: Rp ${row.total_amount.toLocaleString()} (${date})\n\n`;
-                    totalIncome += row.total_amount;
+                    summary += `   Total: Rp ${total.toLocaleString()} (${date})\n\n`;
+
+                    // Hanya hitung jika status dikonfirmasi
+                    if (row.transaction_type === 'confirmed') {
+                        totalIncome += total;
+                    }
                 });
             }
 
-            // Display totals
+            // Total Ringkasan
             summary += '📊 *Total:*\n';
             summary += `💸 Total Pengeluaran: Rp ${totalOutcome.toLocaleString()}\n`;
             summary += `💰 Total Pemasukan: Rp ${totalIncome.toLocaleString()}\n`;
