@@ -751,7 +751,7 @@ client.on('message', async msg => {
         console.log(`📊 User requested transaction history`);
         try {
             const [rows] = await require('./config/database').pool.execute(
-                'SELECT user_name, item_name, quantity, price, total_amount, transaction_category, transaction_type, sender, created_at FROM transactions WHERE group_id = ? ORDER BY created_at DESC LIMIT 15',
+                'SELECT user_name, item_name, quantity, price, total_amount, transaction_category, transaction_type, sender, created_at FROM transactions WHERE group_id = ? and transaction_type != "rejected" ORDER BY created_at DESC LIMIT 15',
                 [msg.from]
             );
 
